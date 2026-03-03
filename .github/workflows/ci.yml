@@ -88,10 +88,10 @@ jobs:
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
-          exit-code: 1         
+          exit-code: 1
 
       - name: Upload résultats dans GitHub Security
         uses: github/codeql-action/upload-sarif@v3
-        if: always()           
+        if: always()
         with:
           sarif_file: trivy-results.sarif
