@@ -1,157 +1,157 @@
-# Architecture SecureDeploy
+# SecureDeploy Architecture
 
-## Vue d'ensemble
+## Overview
 
-Ce projet met en place un environnement de développement local sécurisé utilisant **Traefik** comme reverse proxy avec support HTTPS natif. L'architecture est conteneurisée avec Docker et utilise des certificats SSL auto-signés reconnus par le système.
+This project sets up a secure local development environment using **Traefik** as a reverse proxy with native HTTPS support. The architecture is containerized with Docker and uses self-signed SSL certificates trusted by the system.
 
-## Composants
+## Components
 
 ### 1. Traefik (Reverse Proxy)
 
 **Image**: `traefik:v3.2`
 
-Traefik sert de point d'entrée unique pour toutes les applications. Il gère automatiquement:
-- Le routage des requêtes vers les bons services
-- La terminaison SSL/TLS
-- La redirection automatique HTTP → HTTPS
-- L'exposition d'un dashboard de monitoring
+Traefik serves as the single entry point for all applications. It automatically handles:
+- Routing requests to the appropriate services
+- SSL/TLS termination
+- Automatic HTTP → HTTPS redirection
+- Monitoring dashboard exposure
 
-**Configuration clé**:
-- **Ports exposés**: 80 (HTTP) et 443 (HTTPS)
-- **Dashboard**: Accessible sur `https://traefik.localhost`
-- **Authentification**: Protégé par Basic Auth (credentials dans `.env`)
-- **Auto-discovery**: Détecte automatiquement les conteneurs Docker via labels
+**Key configuration**:
+- **Exposed ports**: 80 (HTTP) and 443 (HTTPS)
+- **Dashboard**: Accessible at `https://traefik.localhost`
+- **Authentication**: Protected by Basic Auth (credentials in `.env`)
+- **Auto-discovery**: Automatically detects Docker containers via labels
 
-### 2. Application de démonstration
+### 2. Demo Application
 
 **Image**: `traefik/whoami`
 
-Application simple qui affiche des informations sur la requête reçue. Sert de preuve de concept pour valider le fonctionnement du proxy.
+Simple application that displays information about the received request. Serves as a proof of concept to validate proxy functionality.
 
-**Accès**: `https://app.localhost`
+**Access**: `https://app.localhost`
 
-### 3. Réseau Docker
+### 3. Docker Network
 
-Un réseau bridge externe nommé `proxy` permet la communication entre Traefik et les services qu'il expose.
+An external bridge network named `proxy` enables communication between Traefik and the services it exposes.
 
-### 4. Certificats SSL
+### 4. SSL Certificates
 
-Les certificats sont générés localement avec **mkcert** et stockés dans le dossier `certs/`:
-- `local.crt` - Certificat
-- `local.key` - Clé privée
+Certificates are generated locally with **mkcert** and stored in the `certs/` folder:
+- `local.crt` - Certificate
+- `local.key` - Private key
 
-Domaines couverts:
+Covered domains:
 - `localhost`
 - `app.localhost`
 - `traefik.localhost`
 
-Ces certificats sont reconnus comme valides par le navigateur car mkcert installe une autorité de certification locale.
+These certificates are recognized as valid by the browser because mkcert installs a local certificate authority.
 
-## Sécurité
+## Security
 
 ### Transport Layer Security (TLS)
-- Tous les services sont accessibles uniquement via HTTPS
-- Redirection automatique de HTTP vers HTTPS
-- Certificats valides pour éviter les avertissements du navigateur
+- All services are accessible only via HTTPS
+- Automatic HTTP to HTTPS redirection
+- Valid certificates to avoid browser warnings
 
-### En-têtes de sécurité
-Middleware `secure-headers` configuré avec:
-- `Strict-Transport-Security` (HSTS): Force HTTPS pour 1 an
-- `X-Content-Type-Options`: Prévient le MIME sniffing
-- `X-XSS-Protection`: Active la protection XSS du navigateur
+### Security Headers
+`secure-headers` middleware configured with:
+- `Strict-Transport-Security` (HSTS): Enforces HTTPS for 1 year
+- `X-Content-Type-Options`: Prevents MIME sniffing
+- `X-XSS-Protection`: Enables browser XSS protection
 
-### Authentification
-Le dashboard Traefik est protégé par Basic Authentication (utilisateur: `admin`, mot de passe défini lors du setup).
+### Authentication
+The Traefik dashboard is protected by Basic Authentication (user: `admin`, password set during setup).
 
-## Flux de requête
+## Request Flow
 
 ```
-Navigateur
+Browser
     ↓
 https://app.localhost
     ↓
 Traefik (port 443)
     ↓
-[Vérifie le Host header]
+[Checks Host header]
     ↓
-[Applique les middlewares]
+[Applies middlewares]
     ↓
-Conteneur app (whoami)
+App container (whoami)
     ↓
-Réponse
+Response
 ```
 
-## Structure des fichiers
+## File Structure
 
 ```
 .
-├── docker-compose.yml          # Orchestration des services
-├── setup-local.sh             # Script d'initialisation
-├── .env                       # Variables d'environnement (credentials)
-├── certs/                     # Certificats SSL locaux
+├── docker-compose.yml          # Service orchestration
+├── setup-local.sh             # Initialization script
+├── .env                       # Environment variables (credentials)
+├── certs/                     # Local SSL certificates
 │   ├── local.crt
 │   └── local.key
 └── traefik/
     └── dynamic/
-        └── tls.yml            # Configuration TLS de Traefik
+        └── tls.yml            # Traefik TLS configuration
 ```
 
-## Installation et démarrage
+## Installation and Startup
 
-### Prérequis
-- Docker et Docker Compose
-- Bash (Linux/macOS/WSL sur Windows)
+### Prerequisites
+- Docker and Docker Compose
+- Bash (Linux/macOS/WSL on Windows)
 
-### Déploiement
+### Deployment
 
-1. **Initialisation**:
+1. **Initialization**:
    ```bash
    chmod +x setup-local.sh
    ./setup-local.sh
    ```
-   Ce script:
-   - Installe mkcert
-   - Génère les certificats SSL
-   - Crée le réseau Docker
-   - Configure l'authentification Traefik
+   This script:
+   - Installs mkcert
+   - Generates SSL certificates
+   - Creates Docker network
+   - Configures Traefik authentication
 
-2. **Lancement**:
+2. **Startup**:
    ```bash
    docker compose up -d
    ```
 
-3. **Accès**:
+3. **Access**:
    - Application: https://app.localhost
-   - Dashboard Traefik: https://traefik.localhost
+   - Traefik Dashboard: https://traefik.localhost
 
-## Extensibilité
+## Extensibility
 
-Pour ajouter un nouveau service:
+To add a new service:
 
-1. Ajouter le service dans `docker-compose.yml`
-2. Le connecter au réseau `proxy`
-3. Configurer les labels Traefik:
+1. Add the service in `docker-compose.yml`
+2. Connect it to the `proxy` network
+3. Configure Traefik labels:
    ```yaml
    labels:
      - "traefik.enable=true"
-     - "traefik.http.routers.monservice.rule=Host(`monservice.localhost`)"
-     - "traefik.http.routers.monservice.entrypoints=websecure"
-     - "traefik.http.routers.monservice.tls=true"
+     - "traefik.http.routers.myservice.rule=Host(`myservice.localhost`)"
+     - "traefik.http.routers.myservice.entrypoints=websecure"
+     - "traefik.http.routers.myservice.tls=true"
    ```
-4. Régénérer les certificats si besoin d'un nouveau domaine
+4. Regenerate certificates if a new domain is needed
 
-## Points forts de l'architecture
+## Architecture Strengths
 
-**Sécurisé par défaut**: HTTPS obligatoire sur tous les services  
-**Zéro configuration manuelle**: Discovery automatique des services  
-**Isolation**: Chaque service dans son conteneur  
-**Scalable**: Architecture prête pour héberger plusieurs applications  
-**Développement proche de la production**: Même stack que pour un déploiement réel  
-**Monitoring intégré**: Dashboard Traefik pour observer le trafic en temps réel
+**Secure by default**: HTTPS mandatory on all services  
+**Zero manual configuration**: Automatic service discovery  
+**Isolation**: Each service in its own container  
+**Scalable**: Architecture ready to host multiple applications  
+**Production-like development**: Same stack as for real deployment  
+**Integrated monitoring**: Traefik dashboard to observe traffic in real-time
 
-## Technologies utilisées
+## Technologies Used
 
-- **Docker Compose**: Orchestration des conteneurs
-- **Traefik v3.2**: Reverse proxy et load balancer moderne
-- **mkcert**: Génération de certificats SSL locaux valides
-- **Whoami**: Application de test légère
+- **Docker Compose**: Container orchestration
+- **Traefik v3.2**: Modern reverse proxy and load balancer
+- **mkcert**: Valid local SSL certificate generation
+- **Whoami**: Lightweight test application
