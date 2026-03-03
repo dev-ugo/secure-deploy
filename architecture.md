@@ -142,12 +142,12 @@ Pour ajouter un nouveau service:
 
 ## Points forts de l'architecture
 
-✅ **Sécurisé par défaut**: HTTPS obligatoire sur tous les services  
-✅ **Zéro configuration manuelle**: Discovery automatique des services  
-✅ **Isolation**: Chaque service dans son conteneur  
-✅ **Scalable**: Architecture prête pour héberger plusieurs applications  
-✅ **Développement proche de la production**: Même stack que pour un déploiement réel  
-✅ **Monitoring intégré**: Dashboard Traefik pour observer le trafic en temps réel
+**Sécurisé par défaut**: HTTPS obligatoire sur tous les services  
+**Zéro configuration manuelle**: Discovery automatique des services  
+**Isolation**: Chaque service dans son conteneur  
+**Scalable**: Architecture prête pour héberger plusieurs applications  
+**Développement proche de la production**: Même stack que pour un déploiement réel  
+**Monitoring intégré**: Dashboard Traefik pour observer le trafic en temps réel
 
 ## Technologies utilisées
 

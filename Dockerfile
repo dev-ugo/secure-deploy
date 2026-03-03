@@ -1,0 +1,18 @@
+# ── Stage 1 : build ────────────────────────────────────────────────────────
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /app
+
+COPY go.mod ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o server ./cmd/server
+
+FROM scratch
+
+COPY --from=builder /app/server /server
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+EXPOSE 8080
+ENTRYPOINT ["/server"]
